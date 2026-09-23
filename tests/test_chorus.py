@@ -145,6 +145,84 @@ def test_full_scale_input_does_not_wrap(manifest, backend):
     assert comparison.snr_db > 70.0, comparison.report()
 
 
+def test_generated_header_is_current(manifest):
+    """The committed sine/constants header must match the manifest.
+
+    The header carries the delay scaling derived from the manifest's units, so
+    editing a knob's `factor` without regenerating leaves the RTL applying the
+    old scaling. That is silent: it still runs, still sounds like a chorus, and
+    is simply mistuned.
+    """
+    import subprocess
+    import sys
+
+    from wavsim.paths import EFFECTS_RTL, REPO_ROOT
+
+    header = EFFECTS_RTL / "chorus" / "chorus_sine_table.svh"
+    before = header.read_text()
+    subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "gen_sine_table.py")],
+        cwd=str(REPO_ROOT), capture_output=True, check=True,
+    )
+    after = header.read_text()
+    if before != after:
+        header.write_text(before)   # leave the tree as we found it
+        pytest.fail(
+            "chorus_sine_table.svh is stale against configs/effects/chorus.json. "
+            "Run: python3 scripts/gen_sine_table.py"
+        )
+
+
+@pytest.mark.parametrize("base_ms", [4.0, 8.0, 12.0, 20.0])
+def test_base_ms_is_really_milliseconds(manifest, backend, base_ms):
+    """base_ms must mean milliseconds, whatever units the bus stores it in.
+
+    This is the check that pins the manifest's declared unit to what the RTL
+    actually does, rather than trusting the two to stay in step.
+    """
+    x = signals.impulse(seconds=0.1, amplitude=0.9)
+    y, _ = process_array(
+        manifest, x,
+        {"mix": "1.0", "depth": "0", "base_ms": str(base_ms)},
+        backend=backend,
+    )
+    index, _ = metrics.impulse_peak(y)
+    expected = round(base_ms * 48)      # 48 samples per ms at 48 kHz
+    assert abs(index - expected) <= 1, (
+        f"base_ms={base_ms} ms should delay by ~{expected} samples, got {index}"
+    )
+
+
+def test_depth_is_really_milliseconds(manifest, backend):
+    """depth must mean milliseconds too, measured as pitch deviation.
+
+    A modulated delay detunes by d(delay)/dt, so the peak swing is
+    2*pi*rate*depth. That makes the pitch swing a direct read-out of depth's
+    unit - and a depth scaled ten times too large is exactly what "the chorus
+    sounds out of tune" means.
+    """
+    scipy_signal = pytest.importorskip("scipy.signal")
+
+    fs, f0 = 48000, 440.0
+    rate, depth_ms = 1.0, 2.0
+    x = signals.sine(f0, 3.0, amplitude=0.5)
+    y, _ = process_array(
+        manifest, x,
+        {"mix": "1.0", "rate": str(rate), "depth": str(depth_ms), "base_ms": "12.0"},
+        backend=backend,
+    )
+
+    phase = np.unwrap(np.angle(scipy_signal.hilbert(y)))
+    inst = np.diff(phase) / (2 * np.pi) * fs
+    cents = 1200 * np.log2(inst[fs // 2 : -fs // 2] / f0)
+
+    expected = 1200 * np.log2(1 + 2 * np.pi * rate * depth_ms / 1000.0)
+    assert float(np.abs(cents).max()) == pytest.approx(expected, rel=0.15), (
+        f"pitch swing {np.abs(cents).max():.1f} cents, expected ~{expected:.1f}; "
+        "depth is being scaled by the wrong unit"
+    )
+
+
 def test_gold_vector(manifest, backend, assert_gold):
     x = signals.pluck(82.41, seconds=0.25)
     y, _ = process_array(manifest, x, {"mix": "0.5", "rate": "1.5"}, backend=backend)

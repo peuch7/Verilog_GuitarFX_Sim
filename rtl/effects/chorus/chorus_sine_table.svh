@@ -18,9 +18,15 @@
 `define CHORUS_PHASE_INC_FRAC 16
 `define CHORUS_PHASE_INC_PER_CENTIHZ 58640620
 
-// 0.1 ms * 48 samples/ms * 2^20 = 5033164.8
-`define CHORUS_DELAY_Q            20
-`define CHORUS_DELAY_PER_TENTH_MS 5033165
+// Delay scaling, derived from configs/effects/chorus.json so the RTL
+// never restates a unit the manifest owns.
+//   base_ms  : 1 bit = 0.1 ms, max 1000
+//   depth    : 1 bit = 0.01 ms, max 1000
+//   reach    : 110.0 ms = 5282 samples -> buffer 8192
+`define CHORUS_DELAY_Q             20
+`define CHORUS_DELAY_PER_BASE_UNIT  5033165
+`define CHORUS_DELAY_PER_DEPTH_UNIT 503316
+`define CHORUS_MAX_DELAY_SAMPLES    8192
 
 `define CHORUS_SINE_INIT \
     sine_tab[0] = 24'sd0; \

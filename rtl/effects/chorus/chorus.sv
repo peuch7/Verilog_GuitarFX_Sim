@@ -51,10 +51,10 @@ module chorus (
 
     // ---------------------------------------------------------------- sizing
 
-    // base_ms tops out at 30.0 ms and depth at 10.0 ms, so the read pointer
-    // never reaches further back than 40 ms = 1920 samples at 48 kHz. Rounded
-    // up to a power of two so the circular address wraps by truncation.
-    localparam int MAX_DELAY_SAMPLES = 2048;
+    // Sized from the manifest's declared base_ms and depth ranges, rounded up
+    // to a power of two so the circular address wraps by truncation. Widening
+    // those ranges grows this buffer, so check the cost the generator prints.
+    localparam int MAX_DELAY_SAMPLES = `CHORUS_MAX_DELAY_SAMPLES;
     localparam int ADDR_W            = $clog2(MAX_DELAY_SAMPLES);
 
     // Fractional bits used when interpolating the delay line: 1/4096 sample.
@@ -66,8 +66,13 @@ module chorus (
     // 48 kHz, and 4.8 * 2^k is never a whole number. At Q12 the rounding offsets
     // a 12 ms delay by 0.006 samples, enough to show up against the reference
     // model at 1 kHz. At Q20 it costs 7.6e-6 samples, which does not.
-    localparam int DELAY_Q              = `CHORUS_DELAY_Q;              // 20
-    localparam int DELAY_Q_PER_TENTH_MS = `CHORUS_DELAY_PER_TENTH_MS;   // 5033165
+    //
+    // base_ms and depth get *separate* constants because the manifest is free
+    // to give them different units, and it does. Sharing one constant here is
+    // how this module once applied ten times the intended modulation.
+    localparam int DELAY_Q                 = `CHORUS_DELAY_Q;
+    localparam int DELAY_PER_BASE_UNIT     = `CHORUS_DELAY_PER_BASE_UNIT;
+    localparam int DELAY_PER_DEPTH_UNIT    = `CHORUS_DELAY_PER_DEPTH_UNIT;
 
     // Phase step per centi-hertz, and the one number in this module that has to
     // be exactly right. An error here is a *rate* error, so the LFO drifts
@@ -149,7 +154,7 @@ module chorus (
     logic signed [SINE_W-1:0]  sine_s0    = '0;
     logic signed [SINE_W-1:0]  sine_s1    = '0;
     logic signed [SINE_W:0]    lfo        = '0;   // Q23, -1.0 .. +1.0
-    logic signed [33:0]        delay_q    = '0;
+    logic signed [39:0]        delay_q    = '0;
     logic [ADDR_W-1:0]         delay_int  = '0;
     logic [FRAC_BITS-1:0]      delay_frac = '0;
     logic signed [23:0]        s_near     = '0;
@@ -170,17 +175,17 @@ module chorus (
 
     // delay = base_ms + depth_ms * lfo. Both are in the same 0.1 ms unit so
     // they share one scaling constant; the LFO only weights the depth term.
-    //   base_term  <= 300 * 5033165 = 1.51e9   (31 bits)
-    //   depth_term <= 100 * 5033165 * 2^23      (52 bits before the shift)
-    logic signed [33:0] base_term;
-    logic signed [33:0] depth_scaled;
+    // 40 bits carries the widest knob settings the manifest allows with room
+    // to spare; the generator prints the reach these constants imply.
+    logic signed [39:0] base_term;
+    logic signed [39:0] depth_scaled;
     logic signed [63:0] depth_term;
-    logic signed [33:0] delay_unclamped;
+    logic signed [39:0] delay_unclamped;
 
-    assign base_term       = 34'($signed({1'b0, base_ms})) * DELAY_Q_PER_TENTH_MS;
-    assign depth_scaled    = 34'($signed({1'b0, depth})) * DELAY_Q_PER_TENTH_MS;
+    assign base_term       = 40'($signed({1'b0, base_ms})) * DELAY_PER_BASE_UNIT;
+    assign depth_scaled    = 40'($signed({1'b0, depth})) * DELAY_PER_DEPTH_UNIT;
     assign depth_term      = 64'(depth_scaled) * 64'(lfo);
-    assign delay_unclamped = base_term + 34'(depth_term >>> SINE_Q);
+    assign delay_unclamped = base_term + 40'(depth_term >>> SINE_Q);
 
     // Interpolation tap addresses. delay_int is clamped to MAX_DELAY_SAMPLES-2,
     // so both subtractions stay inside the buffer once the address truncates.
@@ -269,8 +274,8 @@ module chorus (
                 end
 
                 S_DELAY: begin
-                    if (delay_unclamped < 34'(MIN_DELAY_Q))      delay_q <= 34'(MIN_DELAY_Q);
-                    else if (delay_unclamped > 34'(MAX_DELAY_Q)) delay_q <= 34'(MAX_DELAY_Q);
+                    if (delay_unclamped < 40'(MIN_DELAY_Q))      delay_q <= 40'(MIN_DELAY_Q);
+                    else if (delay_unclamped > 40'(MAX_DELAY_Q)) delay_q <= 40'(MAX_DELAY_Q);
                     else                                         delay_q <= delay_unclamped;
                     state <= S_SPLIT;
                 end

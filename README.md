@@ -1,4 +1,4 @@
-# VerilogSim
+# VerilogFXSim
 
 Test the guitar pedal's effects on real audio without the board.
 

@@ -45,10 +45,10 @@
       "default": 8.0,
       "scale": "raw",
       "min": 0,
-      "max": 1000,
+      "max": 300,
       "unit": "ms",
       "factor": 0.1,
-      "doc": "Centre delay. Stored in 0.1 ms steps."
+      "doc": "Centre delay. Stored in 0.1 ms steps; capped at 30 ms, beyond which it stops being a chorus and the buffer grows."
     }
   ],
   "reference_model": "wavsim.refmodels.chorus:process"

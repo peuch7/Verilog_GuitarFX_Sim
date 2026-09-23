@@ -20,13 +20,13 @@
 
 // Delay scaling, derived from configs/effects/chorus.json so the RTL
 // never restates a unit the manifest owns.
-//   base_ms  : 1 bit = 0.1 ms, max 1000
+//   base_ms  : 1 bit = 0.1 ms, max 300
 //   depth    : 1 bit = 0.01 ms, max 1000
-//   reach    : 110.0 ms = 5282 samples -> buffer 8192
+//   reach    : 40.0 ms = 1922 samples -> buffer 2048
 `define CHORUS_DELAY_Q             20
 `define CHORUS_DELAY_PER_BASE_UNIT  5033165
 `define CHORUS_DELAY_PER_DEPTH_UNIT 503316
-`define CHORUS_MAX_DELAY_SAMPLES    8192
+`define CHORUS_MAX_DELAY_SAMPLES    2048
 
 `define CHORUS_SINE_INIT \
     sine_tab[0] = 24'sd0; \

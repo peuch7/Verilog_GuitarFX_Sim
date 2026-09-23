@@ -33,7 +33,10 @@ def process(x: np.ndarray, params: dict, fs: int = 48000) -> np.ndarray:
     n = np.arange(x.size, dtype=np.float64)
     lfo = np.sin(2.0 * np.pi * rate * n / fs)
     delay = (base_ms + depth_ms * lfo) * fs / 1000.0
-    delay = np.clip(delay, 0.0, None)
+    # Floor of one sample, not zero: a hardware implementation reads its delay
+    # line through a register, so sample n cannot reach its own output. This
+    # only bites when depth exceeds base_ms, which is not a useful setting.
+    delay = np.clip(delay, 1.0, None)
 
     wet = _read_fractional(x, n - delay)
     return x * (1.0 - mix) + wet * mix

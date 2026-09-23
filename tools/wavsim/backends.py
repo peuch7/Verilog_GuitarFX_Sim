@@ -66,6 +66,21 @@ def _newest(paths: Sequence[Path]) -> float:
     return max((p.stat().st_mtime for p in paths if p.exists()), default=0.0)
 
 
+def include_dirs(manifest: Manifest) -> List[Path]:
+    """rtl/common, plus each effect's own directory.
+
+    An effect may keep its own header next to its RTL - chorus does, for its
+    generated sine ROM - and `include resolution differs between tools, so the
+    directories are passed explicitly rather than relied upon. Shared with the
+    lint command so linting and building see the same include path.
+    """
+    dirs = [RTL_COMMON]
+    for source in manifest.sources:
+        if source.parent not in dirs:
+            dirs.append(source.parent)
+    return dirs
+
+
 class Backend:
     name = "base"
 
@@ -99,6 +114,16 @@ class Backend:
 
     def _flush(self, override: Optional[int]) -> int:
         return int(override if override is not None else self.manifest.flush_samples)
+
+    def _include_dirs(self) -> List[Path]:
+        return include_dirs(self.manifest)
+
+    def _headers(self) -> List[Path]:
+        """Headers on the include path, so a regenerated one forces a rebuild."""
+        found: List[Path] = []
+        for d in self._include_dirs():
+            found.extend(sorted(d.glob("*.svh")))
+        return found
 
     @staticmethod
     def _check_params(params: Sequence[int]) -> List[int]:
@@ -146,7 +171,8 @@ class VerilatorBackend(Backend):
                 "or use the Icarus backend with --backend icarus."
             )
         harness = [VERILATOR_DIR / "sim_main.cpp", VERILATOR_DIR / "stream_io.cpp"]
-        deps = list(self.manifest.sources) + harness + [VERILATOR_DIR / "stream_io.h"]
+        deps = (list(self.manifest.sources) + harness
+                + [VERILATOR_DIR / "stream_io.h"] + self._headers())
         marker = self.dir / "build_flags.json"
         flags = {"trace": bool(trace)}
 
@@ -181,10 +207,10 @@ class VerilatorBackend(Backend):
             self.dir / "obj_dir",
             "-o",
             f"sim_{self.manifest.name}",
-            f"+incdir+{RTL_COMMON}",
             "-CFLAGS",
             " ".join(cflags),
         ]
+        cmd += [f"+incdir+{d}" for d in self._include_dirs()]
         if trace:
             cmd += ["--trace", "--trace-depth", "99"]
         cmd += [str(s) for s in self.manifest.sources]
@@ -251,7 +277,7 @@ class IcarusBackend(Backend):
                 "iverilog/vvp not found on PATH. Run `make doctor` for install instructions."
             )
         tb = ICARUS_DIR / "tb_top.sv"
-        deps = list(self.manifest.sources) + [tb]
+        deps = list(self.manifest.sources) + [tb] + self._headers()
         if not force and self._binary.exists() and _newest(deps) <= self._binary.stat().st_mtime:
             return self._binary
 
@@ -259,11 +285,12 @@ class IcarusBackend(Backend):
             "iverilog",
             "-g2012",
             f"-DDUT_TOP={self.manifest.top}",
-            "-I", RTL_COMMON,
             "-s", "tb_top",
             "-o", self._binary,
-            tb,
-        ] + [str(s) for s in self.manifest.sources]
+        ]
+        for d in self._include_dirs():
+            cmd += ["-I", str(d)]
+        cmd += [str(tb)] + [str(s) for s in self.manifest.sources]
         _run(cmd, f"compiling {self.manifest.name} with iverilog")
         return self._binary
 

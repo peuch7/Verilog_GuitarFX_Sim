@@ -92,11 +92,16 @@ docs/                   the contract, setup, and fixed-point notes
 
 ## Current state
 
-`delay` is implemented (by us) and passes. The other five — `distortion`,
-`overdrive`, `chorus`, `reverb`, `echo` — are scaffolded: each has a working
-passthrough module, a manifest with real knob definitions, and **a complete
-float reference model that specifies what it should do**. Start by reading your
-effect's reference model in `tools/wavsim/refmodels/`; that is the target.
+`delay` and `chorus` are implemented and pass. The other four — `distortion`,
+`overdrive`, `reverb`, `echo` — are scaffolded: each has a working passthrough
+module, a manifest with real knob definitions, and **a complete float reference
+model that specifies what it should do**. Start by reading your effect's
+reference model in `tools/wavsim/refmodels/`; that is the target.
+
+`chorus` is worth reading as a worked example before starting your own. It shows
+the sequencer pattern that spreads work across the ~32 clocks between samples so
+a memory only needs one read port, fixed-point interpolation, and a ROM built
+the one way Vivado, Verilator and Icarus all accept.
 
 One known finding, left for the owner to decide on rather than quietly patched:
 `delay.sv` feeds back the buffer read from the *previous* sample rather than the

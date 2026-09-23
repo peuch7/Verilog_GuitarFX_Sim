@@ -16,7 +16,7 @@ from typing import List, Optional
 import numpy as np
 
 from . import SAMPLE_RATE
-from .backends import BackendError, get_backend
+from .backends import BackendError, get_backend, include_dirs
 from .manifest import Manifest, ManifestError, parse_param_items
 from .paths import AUDIO_IN, EFFECT_CONFIGS, CHAIN_CONFIGS, REPO_ROOT, RTL_COMMON, build_dir
 from .pipeline import (
@@ -201,7 +201,8 @@ def cmd_lint(args) -> int:
             # on a teammate's work in progress.
             cmd.append("-Wno-fatal")
             cmd += [f"-Wno-{w}" for w in LINT_SUPPRESS]
-        cmd += ["--top-module", manifest.top, f"+incdir+{RTL_COMMON}"]
+        cmd += ["--top-module", manifest.top]
+        cmd += [f"+incdir+{d}" for d in include_dirs(manifest)]
         cmd += [str(s) for s in manifest.sources]
 
         proc = subprocess.run(cmd, cwd=str(REPO_ROOT), capture_output=True, text=True)

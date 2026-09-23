@@ -88,7 +88,8 @@ the design needs some.
 | 1 s (delay max) | 48000 | 144 kB |
 
 `delay.sv` reserves the full second, which is ~144 kB on its own — over half the
-device. The Schroeder reverb's six delay lines come to about 27 kB. If the mesh
+device. `chorus.sv` needs 2048 samples of buffer (6 kB) plus a 1024-entry sine
+ROM (3 kB). The Schroeder reverb's six delay lines come to about 27 kB. If the mesh
 puts several effects on one board, this is the budget to check first, before
 anyone writes the RTL.
 

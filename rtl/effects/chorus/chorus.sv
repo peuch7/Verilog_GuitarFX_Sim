@@ -30,10 +30,22 @@
 //                -> interpolate -> wet
 //                   -> out = x*(1-mix) + wet*mix
 //
-// There are ~32 clocks between samples and this takes 13, so both memories are
-// read one address at a time. That keeps the sample buffer to a simple
-// dual-port BRAM and lets the sine table infer a BRAM too, instead of the ~380
-// LUTs a combinational two-port read of it would cost.
+// Timing budget. At 100 MHz and 48 kHz there are 2083 clocks per sample and
+// this sequencer uses 13 of them, so the module is busy 0.6% of the time and
+// idle the rest. It could sustain roughly 7.7 MS/s, or be time-shared across
+// ~160 channels, before throughput became a question. Latency is 13 clocks,
+// 130 ns, which is four orders of magnitude below anything a player can feel.
+//
+// That slack is why both memories are read one address per cycle: the sample
+// buffer stays a simple dual-port BRAM and the sine table infers a BRAM,
+// instead of the ~380 LUTs a combinational two-port read would cost. It is
+// also the escape hatch if this does not close timing at 100 MHz - any of the
+// multiplies can be split across extra states at no cost to throughput.
+//
+// One caveat: there is no back-pressure. sample_in_valid is only examined in
+// S_IDLE, so a sample arriving less than 13 clocks after the last one is
+// dropped rather than queued. Harmless at 2083, but a real constraint if this
+// is ever time-shared or run at a higher sample rate.
 //
 module chorus (
     input  logic                            clk,

@@ -145,6 +145,50 @@ def test_full_scale_input_does_not_wrap(manifest, backend):
     assert comparison.snr_db > 70.0, comparison.report()
 
 
+def test_runs_at_the_real_hardware_clock_ratio(manifest, backend):
+    """Real time is not in question: the design uses 13 of 2083 clocks.
+
+    The harness pulses sample_in_valid every 32 clocks to keep simulations
+    short. Hardware gives 100 MHz / 48 kHz = 2083 clocks per sample, so this
+    runs the same audio at the real ratio and requires the output to be
+    identical - the simulation speedup must not be doing the design any
+    favours.
+    """
+    x = signals.sine(440.0, 0.05, amplitude=0.5)
+    fast, _ = process_array(manifest, x, {"mix": "0.5"}, backend=backend,
+                            cycles_per_sample=32)
+    real, _ = process_array(manifest, x, {"mix": "0.5"}, backend=backend,
+                            cycles_per_sample=2083)
+    assert np.array_equal(stream.float_to_samples(fast), stream.float_to_samples(real))
+
+
+def test_minimum_cycles_per_sample(manifest, backend):
+    """The sequencer needs 13 clocks, and has no back-pressure below that.
+
+    Feeding samples faster than the sequencer runs makes it drop them, because
+    sample_in_valid is only looked at in S_IDLE. That is harmless at 2083 clocks
+    per sample, but it is a real constraint if the design is ever time-shared
+    across channels or moved to a higher sample rate, so it is pinned here.
+    """
+    x = signals.sine(440.0, 0.02, amplitude=0.5)
+    reference, _ = process_array(manifest, x, {"mix": "0.5"}, backend=backend,
+                                 cycles_per_sample=32)
+    expected = stream.float_to_samples(reference)
+
+    at_limit, _ = process_array(manifest, x, {"mix": "0.5"}, backend=backend,
+                                cycles_per_sample=13)
+    assert np.array_equal(stream.float_to_samples(at_limit), expected), (
+        "13 clocks per sample should be enough"
+    )
+
+    too_fast, _ = process_array(manifest, x, {"mix": "0.5"}, backend=backend,
+                                cycles_per_sample=12)
+    assert not np.array_equal(stream.float_to_samples(too_fast), expected), (
+        "12 clocks per sample should drop samples; if this passes the sequencer "
+        "got shorter and the documented budget needs updating"
+    )
+
+
 def test_generated_header_is_current(manifest):
     """The committed sine/constants header must match the manifest.
 

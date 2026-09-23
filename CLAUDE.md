@@ -12,6 +12,11 @@ as a `.wav`, with metrics against a float reference model.
 
 This repository is the *test harness*, not the pedal firmware.
 
+`docs/architecture.md` explains how the harness works internally — the call
+chain, the timing model, why the two backends differ where they do, and the
+invariants that break quietly. Read it before changing anything under `sim/` or
+`tools/wavsim/`.
+
 ## Ground rules
 
 **Do not modify files under `rtl/effects/<name>/<name>.sv` unless asked.** Those

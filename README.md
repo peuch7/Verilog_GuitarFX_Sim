@@ -80,6 +80,16 @@ tests/                  pytest suite and committed gold vectors
 docs/                   the contract, setup, and fixed-point notes
 ```
 
+## Documentation
+
+| Document | For |
+|---|---|
+| [docs/getting_started.md](docs/getting_started.md) | Setting up on Windows, macOS or Linux |
+| [docs/module_contract.md](docs/module_contract.md) | Writing an effect — the only rules your module must follow |
+| [docs/fixed_point.md](docs/fixed_point.md) | Q formats, overflow, rounding, BRAM budget |
+| [docs/architecture.md](docs/architecture.md) | How the harness itself works, for changing it |
+| [sim/STREAM_FORMAT.md](sim/STREAM_FORMAT.md) | The sample stream and automation file formats |
+
 ## Current state
 
 `delay` is implemented (by us) and passes. The other five — `distortion`,

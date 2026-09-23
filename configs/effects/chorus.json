@@ -1,0 +1,55 @@
+{
+  "name": "chorus",
+  "top": "chorus_top",
+  "owner": "",
+  "description": "LFO-modulated short delay mixed with the dry signal",
+  "sources": [
+    "rtl/effects/chorus/chorus.sv",
+    "rtl/effects/chorus/chorus_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "rate",
+      "index": 0,
+      "default": 1.0,
+      "scale": "raw",
+      "min": 10,
+      "max": 800,
+      "unit": "Hz",
+      "factor": 0.01,
+      "doc": "LFO frequency. Stored in centi-hertz: 100 = 1.00 Hz."
+    },
+    {
+      "name": "depth",
+      "index": 1,
+      "default": 3.0,
+      "scale": "raw",
+      "min": 0,
+      "max": 100,
+      "unit": "ms",
+      "factor": 0.1,
+      "doc": "Peak sweep either side of base_ms. Stored in 0.1 ms steps."
+    },
+    {
+      "name": "mix",
+      "index": 2,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Dry/wet balance."
+    },
+    {
+      "name": "base_ms",
+      "index": 3,
+      "default": 12.0,
+      "scale": "raw",
+      "min": 10,
+      "max": 300,
+      "unit": "ms",
+      "factor": 0.1,
+      "doc": "Centre delay. Stored in 0.1 ms steps."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.chorus:process"
+}

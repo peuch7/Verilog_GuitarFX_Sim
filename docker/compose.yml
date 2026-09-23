@@ -1,0 +1,26 @@
+# docker compose -f docker/compose.yml run --rm sim wavsim run --effect delay
+#
+# The Makefile wraps this (`make docker-run ...`), as does wavsim.ps1 on Windows.
+services:
+  sim:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: wavsim:latest
+    working_dir: /work
+    volumes:
+      # The whole repo, so edits and generated audio are shared with the host.
+      - ..:/work
+      # Build artifacts stay in a named volume: object files built inside the
+      # container would otherwise collide with a native build on the host, and
+      # on Windows they are much faster outside the bind mount.
+      - wavsim-build:/work/build
+      # Hide the host's .venv. A macOS or Windows virtualenv is visible through
+      # the bind mount but its interpreter cannot run here, and the container
+      # has its dependencies as system packages regardless.
+      - /work/.venv
+    stdin_open: true
+    tty: true
+
+volumes:
+  wavsim-build:

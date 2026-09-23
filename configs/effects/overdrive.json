@@ -1,0 +1,46 @@
+{
+  "name": "overdrive",
+  "top": "overdrive_top",
+  "owner": "",
+  "description": "soft-clipping (tanh) overdrive",
+  "sources": [
+    "rtl/effects/overdrive/overdrive.sv",
+    "rtl/effects/overdrive/overdrive_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "drive",
+      "index": 0,
+      "default": 4,
+      "scale": "raw",
+      "min": 1,
+      "max": 32,
+      "unit": "x",
+      "doc": "Gain into the tanh curve."
+    },
+    {
+      "name": "tone",
+      "index": 1,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Same one-pole tilt as distortion."
+    },
+    {
+      "name": "level",
+      "index": 2,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Output attenuation."
+    },
+    {
+      "name": "asymmetry",
+      "index": 3,
+      "default": 0.0,
+      "scale": "q16",
+      "doc": "0 = symmetric; higher adds even harmonics."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.overdrive:process"
+}

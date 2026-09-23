@@ -1,0 +1,49 @@
+{
+  "name": "echo",
+  "top": "echo_top",
+  "owner": "",
+  "description": "a fixed number of discrete decaying repeats (feed-forward taps)",
+  "sources": [
+    "rtl/effects/echo/echo.sv",
+    "rtl/effects/echo/echo_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "delay_samples",
+      "index": 0,
+      "default": 12000,
+      "scale": "raw",
+      "min": 0,
+      "max": 48000,
+      "unit": "samples",
+      "doc": "Spacing between repeats."
+    },
+    {
+      "name": "decay",
+      "index": 1,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Amplitude ratio between consecutive repeats."
+    },
+    {
+      "name": "taps",
+      "index": 2,
+      "default": 4,
+      "scale": "raw",
+      "min": 1,
+      "max": 8,
+      "unit": "repeats",
+      "doc": "How many repeats are generated."
+    },
+    {
+      "name": "mix",
+      "index": 3,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Dry/wet balance."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.echo:process"
+}

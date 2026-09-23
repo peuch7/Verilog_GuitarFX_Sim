@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wavsim"
+version = "0.1.0"
+description = "End-to-end .wav -> SystemVerilog effect -> .wav simulation harness for the Zybo Z7 guitar pedal"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    # Used by the reference models (biquads via lfilter, oversampling) and by
+    # metrics/plots. Deliberately NOT used by resample.py: the wav -> stream
+    # front end stays on the in-repo polyphase resampler so gold vectors are
+    # bit-identical across machines and scipy versions.
+    "scipy>=1.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "matplotlib>=3.5"]
+
+[project.scripts]
+wavsim = "wavsim.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

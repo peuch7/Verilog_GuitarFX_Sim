@@ -1,0 +1,39 @@
+{
+  "name": "delay",
+  "top": "delay_top",
+  "owner": "",
+  "description": "Fixed delay line with feedback and a dry/wet mix.",
+  "sources": [
+    "rtl/effects/delay/delay.sv",
+    "rtl/effects/delay/delay_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "delay_samples",
+      "index": 0,
+      "default": 12000,
+      "scale": "raw",
+      "min": 0,
+      "max": 48000,
+      "unit": "samples",
+      "doc": "Delay length. 48000 samples = 1.0 s at 48 kHz."
+    },
+    {
+      "name": "feedback",
+      "index": 1,
+      "default": 0.4,
+      "scale": "q16",
+      "doc": "How much of the delayed signal is written back into the line. 0 = one repeat."
+    },
+    {
+      "name": "mix",
+      "index": 2,
+      "default": 0.5,
+      "scale": "q16",
+      "doc": "Dry/wet balance. 0 = dry only, 1.0 = delayed only."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.delay:process"
+}

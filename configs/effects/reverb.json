@@ -1,0 +1,36 @@
+{
+  "name": "reverb",
+  "top": "reverb_top",
+  "owner": "",
+  "description": "Schroeder reverb: four parallel combs into two allpass stages",
+  "sources": [
+    "rtl/effects/reverb/reverb.sv",
+    "rtl/effects/reverb/reverb_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "decay",
+      "index": 0,
+      "default": 0.7,
+      "scale": "q16",
+      "doc": "Comb feedback. Higher = longer tail."
+    },
+    {
+      "name": "damping",
+      "index": 1,
+      "default": 0.3,
+      "scale": "q16",
+      "doc": "Lowpass inside the comb loop, so highs decay first."
+    },
+    {
+      "name": "mix",
+      "index": 2,
+      "default": 0.3,
+      "scale": "q16",
+      "doc": "Dry/wet balance."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.reverb:process"
+}

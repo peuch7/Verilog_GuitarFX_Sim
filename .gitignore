@@ -1,0 +1,35 @@
+# Simulation build artifacts
+obj_dir/
+build/
+*.vvp
+*.vcd
+*.fst
+*.o
+*.d
+*.a
+
+# Generated audio and intermediate streams
+audio/output/
+audio/input/*.wav
+*.pcm24
+*.pcm24.txt
+*.meta.json
+
+# Analysis output
+*.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gold regression vectors are committed on purpose.
+!tests/gold/*.pcm24
+!tests/gold/*.meta.json

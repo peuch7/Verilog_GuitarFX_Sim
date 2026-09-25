@@ -16,7 +16,7 @@
       "default": 4,
       "scale": "raw",
       "min": 1,
-      "max": 32,
+      "max": 65536,
       "unit": "x",
       "doc": "Gain into the tanh curve."
     },

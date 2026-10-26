@@ -1,0 +1,26 @@
+
+{
+  "name": "lowpass",
+  "top": "lowpass_top",
+  "owner": "",
+  "description": "First-order IIR low-pass filter with adjustable cutoff frequency.",
+  "sources": [
+    "rtl/effects/lowpass/lowpass.sv",
+    "rtl/effects/lowpass/lowpass_top.sv"
+  ],
+  "cycles_per_sample": 32,
+  "flush_samples": 16,
+  "params": [
+    {
+      "name": "cutoff_hz",
+      "index": 0,
+      "default": 1000,
+      "scale": "raw",
+      "min": 100,
+      "max": 10000,
+      "unit": "Hz",
+      "doc": "Low-pass filter cutoff frequency in Hz."
+    }
+  ],
+  "reference_model": "wavsim.refmodels.lowpass:process"
+}

@@ -1,4 +1,3 @@
-<CodeBlock language="systemverilog" editable>
 `timescale 1ns / 1ps
 `include "effect_contract.svh"
 

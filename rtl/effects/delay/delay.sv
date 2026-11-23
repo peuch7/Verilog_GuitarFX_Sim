@@ -27,6 +27,8 @@ module delay (
     input [15:0] delay_samples, //max 48000
     input [15:0] feedback, //feedback being high means lots of repetitions. feedback 0 means 1 repetetion.
     input [15:0] mix, //mix being high means the delayed samples are loud compared to current. mix = 0 means only hear current
+	//ADD------------------------------------------------------------------------------------------------------------------------------------------
+	input rst_n,
     
     output logic signed [23:0] sample_out,
     output logic sample_out_valid
@@ -64,19 +66,27 @@ module delay (
                                    old_sample * $signed({1'b0, feedback});
     
     always_ff @(posedge clk) begin
-        sample_out_unscaled_valid <= 1'd0; //default
-        
-        sample_out <= sample_out_unscaled >>> 16;
-        if (sample_in_valid) begin
-            old_sample <= sample_buf[cur_addr];
-            sample_out_unscaled_valid <= 1'd1;
-            //store current sample in bram and also in a register for our combinational output
-            sample_buf[cur_addr] <= to_be_stored_unscaled >>> 16;
-            cur_sample <= sample_in;
-            cur_addr <= (cur_addr == max_addr) ? 0 : cur_addr + 'd1;
-        end
-        
-        sample_out_valid <= sample_out_unscaled_valid;
+		//ADD----------------------------------------------------------------------------------------------------------------------------------------
+		if (rst_n == 1'b0) begin
+			for (int i = 0; i < MAX_DELAY_SAMPLES; i++) begin
+				sample_buf[i] <= 24'sd0;
+			end
+		end
+		else begin
+			sample_out_unscaled_valid <= 1'd0; //default
+			
+			sample_out <= sample_out_unscaled >>> 16;
+			if (sample_in_valid) begin
+				old_sample <= sample_buf[cur_addr];
+				sample_out_unscaled_valid <= 1'd1;
+				//store current sample in bram and also in a register for our combinational output
+				sample_buf[cur_addr] <= to_be_stored_unscaled >>> 16;
+				cur_sample <= sample_in;
+				cur_addr <= (cur_addr == max_addr) ? 0 : cur_addr + 'd1;
+			end
+			
+			sample_out_valid <= sample_out_unscaled_valid;
+		end
     end 
         
         

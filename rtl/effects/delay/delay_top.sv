@@ -30,7 +30,7 @@ module delay_top (
         .clk              (clk),
         .sample_in        (sample_in),
         .sample_in_valid  (sample_in_valid),
-
+        .rst_n(rst_n),
         .delay_samples    (`PARAM(0)),
         .feedback         (`PARAM(1)),
         .mix              (`PARAM(2)),
